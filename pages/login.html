@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Bipolar Data Science Forum</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .auth-page { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:2rem; }
+    .auth-card { background:var(--surface); border:1px solid var(--rule); border-radius:16px;
+                 padding:2.5rem; width:min(440px,100%); }
+    .auth-card h1 { font-size:1.8rem; margin-bottom:.4rem; }
+    .auth-sub  { font-size:.9rem; color:var(--ink2); margin-bottom:2rem; }
+    .auth-form { display:flex; flex-direction:column; gap:1rem; }
+    .auth-switch { text-align:center; font-size:.85rem; color:var(--ink2); margin-top:1rem; }
+    .auth-switch a { color:var(--sky-mid); font-weight:600; text-decoration:none; }
+    .forgot-link { font-size:.8rem; color:var(--sky-mid); text-align:right; display:block;
+                   margin-top:-.4rem; text-decoration:none; cursor:pointer; }
+    .error-msg { background:#fcebeb; border:1px solid #f09595; border-radius:7px;
+                 padding:.65rem 1rem; font-size:.84rem; color:#a32d2d; display:none; }
+    .error-msg.show { display:block; }
+    .success-msg { background:var(--teal-light); border:1px solid #5DCAA5; border-radius:7px;
+                   padding:.65rem 1rem; font-size:.84rem; color:var(--teal-dark); display:none; }
+    .success-msg.show { display:block; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-logo">Bipolar Data Science Forum<span>Science · Community · Lived Experience</span></a>
+    <div id="nav-signin" style="display:flex;gap:.5rem;margin-left:auto">
+      <a href="signup.html" class="btn btn-primary btn-sm">Join free</a>
+    </div>
+    <div id="nav-user-area"></div>
+  </div>
+</header>
+
+<div class="auth-page">
+  <div class="auth-card fade-up">
+    <h1>Welcome back</h1>
+    <p class="auth-sub">Sign in to post in the forum, submit projects, and manage your profile.</p>
+
+    <div class="error-msg"   id="err"></div>
+    <div class="success-msg" id="succ"></div>
+
+    <div class="auth-form">
+      <div class="form-field">
+        <label class="form-label">Email address</label>
+        <input class="form-input" id="email" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="password" type="password" placeholder="Your password" autocomplete="current-password">
+        <span class="forgot-link" onclick="doReset()">Forgot password?</span>
+      </div>
+      <button class="btn btn-primary" style="width:100%" id="signin-btn" onclick="doSignin()">
+        Sign in
+      </button>
+    </div>
+
+    <p class="auth-switch">Don't have an account? <a href="signup.html">Join free →</a></p>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../js/firebase.js"></script>
+<script>
+async function doSignin() {
+  const btn   = document.getElementById('signin-btn');
+  const email = document.getElementById('email').value.trim();
+  const pw    = document.getElementById('password').value;
+  clearMsgs();
+
+  if (!email || !pw) { showErr('Please enter your email and password.'); return; }
+
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    const redirect = new URLSearchParams(window.location.search).get('next') || '../index.html';
+    window.location.href = redirect;
+  } catch(e) {
+    showErr(friendlyError(e.code));
+    btn.textContent = 'Sign in'; btn.disabled = false;
+  }
+}
+
+async function doReset() {
+  const email = document.getElementById('email').value.trim();
+  clearMsgs();
+  if (!email) { showErr('Enter your email above first, then click Forgot password.'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showSucc('Reset email sent! Check your inbox.');
+  } catch(e) {
+    showErr(friendlyError(e.code));
+  }
+}
+
+// allow Enter key to submit
+document.addEventListener('keydown', e => { if (e.key === 'Enter') doSignin(); });
+
+function showErr(msg)  { const el = document.getElementById('err');  el.textContent = msg; el.classList.add('show'); }
+function showSucc(msg) { const el = document.getElementById('succ'); el.textContent = msg; el.classList.add('show'); }
+function clearMsgs()   { ['err','succ'].forEach(id => document.getElementById(id).classList.remove('show')); }
+
+function friendlyError(code) {
+  const map = {
+    'auth/user-not-found':     'No account found with that email.',
+    'auth/wrong-password':     'Incorrect password. Try again or reset it.',
+    'auth/invalid-email':      'That doesn\'t look like a valid email.',
+    'auth/too-many-requests':  'Too many attempts. Wait a moment and try again.',
+    'auth/network-request-failed': 'Network error. Check your connection.',
+  };
+  return map[code] || 'Sign-in failed. Please try again.';
+}
+
+auth.onAuthStateChanged(u => { if (u) window.location.href = '../index.html'; });
+</script>
+</body>
+</html>

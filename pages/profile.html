@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — Bipolar Data Science Forum</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    .profile-page { max-width:860px; margin:0 auto; padding:3rem 2rem; }
+    .profile-header { display:flex; align-items:center; gap:1.5rem; margin-bottom:2.5rem; }
+    .profile-avatar-lg { width:72px; height:72px; border-radius:50%; font-size:1.5rem;
+                          font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .profile-name  { font-family:var(--serif); font-size:1.8rem; margin-bottom:.25rem; }
+    .profile-email { font-size:.85rem; color:var(--ink3); font-family:var(--mono); }
+    .profile-section { background:var(--surface); border:1px solid var(--rule); border-radius:12px;
+                        padding:1.5rem; margin-bottom:1.5rem; }
+    .profile-section h3 { font-family:var(--serif); font-size:1.1rem; margin-bottom:1.2rem;
+                           padding-bottom:.75rem; border-bottom:1px solid var(--rule); }
+    .badge-picker  { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1rem; }
+    .badge-pick    { font-size:.72rem; padding:.3rem .75rem; border-radius:20px;
+                     border:1px solid var(--rule); cursor:pointer; background:var(--surface);
+                     color:var(--ink2); transition:all .15s; font-family:var(--sans); }
+    .badge-pick.on { background:var(--sky); border-color:var(--sky-mid); color:var(--sky-dark); }
+    .badge-pick.on.research { background:var(--purple-light); border-color:var(--purple); color:var(--purple-dark); }
+    .badge-pick.on.ds       { background:var(--green-light);  border-color:var(--green);  color:var(--green-dark); }
+    .badge-pick.on.dx       { background:var(--pink-light);   border-color:#f4c0d1;        color:#72243e; }
+    .badge-pick.on.care     { background:var(--amber-light);  border-color:var(--amber);  color:var(--amber-dark); }
+    .save-btn-row { display:flex; gap:.8rem; align-items:center; margin-top:1.2rem; }
+    .saved-indicator { font-size:.82rem; color:var(--teal); display:none; }
+    .saved-indicator.show { display:inline; }
+    .new-user-banner { background:var(--teal-light); border:1px solid #5DCAA5; border-radius:10px;
+                        padding:1.1rem 1.4rem; margin-bottom:2rem; }
+    .new-user-banner h3 { font-family:var(--serif); font-size:1.1rem; margin-bottom:.35rem; color:var(--teal-dark); }
+    .new-user-banner p  { font-size:.88rem; color:var(--teal-dark); line-height:1.65; }
+    .my-posts-list { display:flex; flex-direction:column; gap:.8rem; }
+    .my-post-item  { padding:.75rem 0; border-bottom:1px solid var(--rule); }
+    .my-post-item:last-child { border-bottom:none; }
+    .my-post-title { font-size:.9rem; font-weight:500; color:var(--ink); margin-bottom:.2rem; }
+    .my-post-meta  { font-size:.75rem; color:var(--ink3); font-family:var(--mono); }
+    .not-signed-in { text-align:center; padding:5rem 2rem; }
+    .not-signed-in h2 { font-family:var(--serif); margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-logo">Bipolar Data Science Forum<span>Science · Community · Lived Experience</span></a>
+    <nav>
+      <a href="../index.html#research">Research</a>
+      <a href="../index.html#projects">DS Projects</a>
+      <a href="../index.html#forum">Forum</a>
+    </nav>
+    <div id="nav-signin">
+      <a href="login.html"  class="btn btn-ghost btn-sm">Sign in</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Join</a>
+    </div>
+    <div id="nav-user-area">
+      <div class="nav-avatar"><span id="nav-avatar-initial">?</span></div>
+      <span id="nav-display-name"></span>
+      <button class="nav-signout-btn" onclick="auth.signOut().then(()=>window.location.href='../index.html')">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="profile-page" id="profile-page">
+  <div style="text-align:center;padding:3rem"><div class="spinner"></div></div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../js/firebase.js"></script>
+<script>
+const ALL_BADGES = {
+  profession: ['Teacher','Engineer','Nurse','Social Worker','Artist','Writer','Lawyer',
+               'Accountant','Designer','Entrepreneur','Student'],
+  research:   ['Psychiatrist','Researcher','Neuroscientist','Psychologist',
+               'Patient Advocate','Pharmacist','Counselor'],
+  ds:         ['Data Scientist','ML Engineer','Statistician','Software Engineer','Bioinformatician'],
+  dx:         ['Diagnosed · BD I','Diagnosed · BD II','Diagnosed · BD NOS'],
+  care:       ['Caregiver','Family Member','Partner/Spouse'],
+};
+
+const avatarBgs = ['var(--sky)','var(--teal-light)','var(--purple-light)','var(--amber-light)','var(--green-light)'];
+const avatarFgs = ['var(--sky-dark)','var(--teal-dark)','var(--purple-dark)','var(--amber-dark)','var(--green-dark)'];
+
+let currentUser = null;
+let profileData = {};
+
+auth.onAuthStateChanged(async user => {
+  const page = document.getElementById('profile-page');
+  if (!user) {
+    page.innerHTML = `
+      <div class="not-signed-in">
+        <h2>Sign in to view your profile</h2>
+        <p style="color:var(--ink2);margin-bottom:1.5rem">Your profile stores your badges, bio, and post history.</p>
+        <a href="login.html" class="btn btn-primary">Sign in</a>
+        <a href="signup.html" class="btn btn-outline" style="margin-left:.8rem">Create account</a>
+      </div>`;
+    return;
+  }
+  currentUser = user;
+
+  // load or create profile doc
+  const ref  = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+  if (snap.exists) {
+    profileData = snap.data();
+  } else {
+    profileData = { displayName: user.displayName||'', email: user.email, badges:[], bio:'', joinedAt: null };
+    await ref.set({ ...profileData, joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+
+  renderProfile(user, profileData, page);
+});
+
+function renderProfile(user, data, page) {
+  const isNew  = new URLSearchParams(window.location.search).get('new') === '1';
+  const ci     = (user.uid.charCodeAt(0)||0) % avatarBgs.length;
+  const init   = (data.displayName||user.email||'?')[0].toUpperCase();
+  const savedBadges = data.badges || [];
+
+  // build badge picker HTML
+  function sectionPicker(title, group, type) {
+    const picks = ALL_BADGES[group].map(b => {
+      const on = savedBadges.includes(b) ? `on ${type}` : '';
+      return `<button class="badge-pick ${on}" data-badge="${b}" data-type="${type}" onclick="toggleBadge(this)">${b}</button>`;
+    }).join('');
+    return `<p style="font-size:.75rem;font-weight:600;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${title}</p>
+            <div class="badge-picker">${picks}</div>`;
+  }
+
+  page.innerHTML = `
+    ${isNew ? `<div class="new-user-banner"><h3>Welcome to the forum! 🎉</h3><p>Set up your profile below — especially your badges. They'll appear on every post you make so the community knows where you're coming from.</p></div>` : ''}
+
+    <div class="profile-header fade-up">
+      <div class="profile-avatar-lg" style="background:${avatarBgs[ci]};color:${avatarFgs[ci]}">${init}</div>
+      <div>
+        <p class="profile-name">${data.displayName || 'Your Profile'}</p>
+        <p class="profile-email">${user.email}</p>
+        ${savedBadges.length ? `<div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem">${renderBadges(savedBadges)}</div>` : ''}
+      </div>
+    </div>
+
+    <!-- basic info -->
+    <div class="profile-section fade-up">
+      <h3>Basic info</h3>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="form-label">Display name</label>
+          <input class="form-input" id="f-name" value="${escHtml(data.displayName||'')}" placeholder="Your name in the forum">
+        </div>
+        <div class="form-field">
+          <label class="form-label">Profession / role (optional)</label>
+          <input class="form-input" id="f-profession" value="${escHtml(data.profession||'')}" placeholder="e.g. Data Scientist, Teacher, Artist">
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Short bio (optional)</label>
+          <textarea class="form-textarea" id="f-bio" placeholder="Tell the community a bit about yourself and your connection to bipolar disorder…" style="min-height:80px">${escHtml(data.bio||'')}</textarea>
+        </div>
+      </div>
+      <div class="save-btn-row">
+        <button class="btn btn-primary btn-sm" onclick="saveBasicInfo()">Save info</button>
+        <span class="saved-indicator" id="info-saved">✓ Saved</span>
+      </div>
+    </div>
+
+    <!-- badge picker -->
+    <div class="profile-section fade-up">
+      <h3>Your badges</h3>
+      <p style="font-size:.86rem;color:var(--ink2);margin-bottom:1.2rem;line-height:1.65">
+        These badges appear on all your forum posts and project submissions. Select everything that applies — the more context you share, the richer the community conversation.
+      </p>
+      ${sectionPicker('Diagnosed', 'dx', 'dx')}
+      ${sectionPicker('Research & Clinical roles', 'research', 'research')}
+      ${sectionPicker('Data Science & Tech', 'ds', 'ds')}
+      ${sectionPicker('Caregiver & Family', 'care', 'care')}
+      ${sectionPicker('Profession / Job', 'profession', 'job')}
+      <div class="save-btn-row">
+        <button class="btn btn-teal btn-sm" onclick="saveBadges()">Save badges</button>
+        <span class="saved-indicator" id="badge-saved">✓ Saved</span>
+      </div>
+    </div>
+
+    <!-- my posts -->
+    <div class="profile-section fade-up">
+      <h3>My recent posts</h3>
+      <div id="my-posts"><div class="spinner"></div></div>
+    </div>
+
+    <!-- danger zone -->
+    <div class="profile-section fade-up" style="border-color:#f09595">
+      <h3 style="color:#a32d2d">Account</h3>
+      <p style="font-size:.86rem;color:var(--ink2);margin-bottom:1rem">Need to delete your account? Email us and we'll remove your data.</p>
+      <button class="btn btn-danger btn-sm" onclick="auth.signOut().then(()=>window.location.href='../index.html')">Sign out</button>
+    </div>`;
+
+  loadMyPosts(user.uid);
+}
+
+function toggleBadge(btn) {
+  const type = btn.dataset.type;
+  const isOn = btn.classList.toggle('on');
+  if (isOn)  btn.classList.add(type);
+  else       btn.classList.remove(type);
+}
+
+async function saveBasicInfo() {
+  if (!currentUser) return;
+  const name = document.getElementById('f-name').value.trim();
+  const bio  = document.getElementById('f-bio').value.trim();
+  const prof = document.getElementById('f-profession').value.trim();
+  await Promise.all([
+    db.collection('users').doc(currentUser.uid).update({ displayName: name, bio, profession: prof }),
+    currentUser.updateProfile({ displayName: name })
+  ]);
+  flash('info-saved');
+}
+
+async function saveBadges() {
+  if (!currentUser) return;
+  const selected = [...document.querySelectorAll('.badge-pick.on')].map(b => b.dataset.badge);
+  await db.collection('users').doc(currentUser.uid).update({ badges: selected });
+  flash('badge-saved');
+}
+
+function flash(id) {
+  const el = document.getElementById(id);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+async function loadMyPosts(uid) {
+  const container = document.getElementById('my-posts');
+  if (!container) return;
+  const snap = await db.collection('posts')
+    .where('authorId','==',uid)
+    .orderBy('createdAt','desc')
+    .limit(10).get();
+  if (snap.empty) {
+    container.innerHTML = '<p style="font-size:.86rem;color:var(--ink3)">No posts yet. Head to the forum to start a discussion!</p>';
+    return;
+  }
+  container.innerHTML = '<div class="my-posts-list">' +
+    snap.docs.map(doc => {
+      const d = doc.data();
+      return `<div class="my-post-item">
+        <p class="my-post-title">${d.body.substring(0,120)}${d.body.length>120?'…':''}</p>
+        <p class="my-post-meta">${timeAgo(d.createdAt)} · ♡ ${d.likes||0}</p>
+      </div>`;
+    }).join('') + '</div>';
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

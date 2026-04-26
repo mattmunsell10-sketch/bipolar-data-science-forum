@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bipolar Data Science Forum</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='28'>🧠</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ── PAGE-SPECIFIC ── */
+    .hero {
+      max-width:1240px; margin:0 auto;
+      padding:4.5rem 2rem 3.5rem;
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:4rem; align-items:center;
+    }
+    .hero-kicker { font-family:var(--mono); font-size:.67rem; letter-spacing:.15em;
+                   text-transform:uppercase; color:var(--teal); margin-bottom:1rem; display:block; }
+    .hero h1 { font-size:clamp(2.2rem,3.8vw,3.4rem); line-height:1.1;
+               margin-bottom:1.1rem; }
+    .hero h1 em { font-style:italic; color:var(--sky-mid); }
+    .hero-sub { font-size:1rem; color:var(--ink2); line-height:1.75;
+                margin-bottom:2rem; max-width:44ch; }
+    .hero-btns { display:flex; gap:.8rem; flex-wrap:wrap; }
+    .hero-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+
+    /* research */
+    .research-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.2rem; }
+    .rc-meta  { display:flex; align-items:center; gap:.5rem; margin-bottom:.8rem; flex-wrap:wrap; }
+    .rc-type  { font-family:var(--mono); font-size:.61rem; letter-spacing:.1em;
+                text-transform:uppercase; padding:.2rem .55rem; border-radius:4px; font-weight:500; }
+    .type-neuro   { background:var(--purple-light); color:var(--purple-dark); }
+    .type-behav   { background:var(--teal-light);   color:var(--teal-dark); }
+    .type-pharma  { background:var(--amber-light);  color:var(--amber-dark); }
+    .type-genetic { background:var(--sky);           color:var(--sky-dark); }
+    .type-clinical{ background:var(--pink-light);    color:#72243e; }
+    .rc-year  { font-size:.74rem; color:var(--ink3); font-family:var(--mono); }
+    .rc-title { font-family:var(--serif); font-size:1.02rem; line-height:1.3;
+                margin-bottom:.5rem; color:var(--ink); }
+    .rc-journal { font-size:.77rem; color:var(--ink3); margin-bottom:.7rem; font-style:italic; }
+    .rc-excerpt { font-size:.84rem; color:var(--ink2); line-height:1.65; margin-bottom:.9rem; }
+    .rc-link { font-size:.77rem; color:var(--sky-mid); font-weight:600; text-decoration:none; }
+    .rc-link:hover { color:var(--sky-dark); }
+    a.card { text-decoration:none; color:inherit; display:block; }
+
+    /* DS projects */
+    .ds-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1.2rem; }
+    .ds-card { background:var(--surface); border:1px solid var(--rule); border-radius:12px;
+               padding:1.4rem; transition:border-color .2s,transform .2s;
+               display:flex; flex-direction:column; gap:.75rem; }
+    .ds-card:hover { border-color:var(--teal); transform:translateY(-2px); }
+    .ds-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+    .ds-author { font-size:.78rem; color:var(--ink3); font-family:var(--mono); }
+    .ds-status { font-family:var(--mono); font-size:.6rem; letter-spacing:.1em;
+                 text-transform:uppercase; padding:.22rem .55rem; border-radius:20px; white-space:nowrap; flex-shrink:0; }
+    .status-active   { background:var(--teal-light);   color:var(--teal-dark); }
+    .status-complete { background:var(--sky);           color:var(--sky-dark); }
+    .status-wip      { background:var(--amber-light);   color:var(--amber-dark); }
+    .status-seeking  { background:var(--purple-light);  color:var(--purple-dark); }
+    .ds-desc  { font-size:.86rem; color:var(--ink2); line-height:1.65; }
+    .ds-stack { display:flex; flex-wrap:wrap; gap:.4rem; }
+    .ds-tag   { font-family:var(--mono); font-size:.62rem; padding:.2rem .55rem;
+                border-radius:4px; background:var(--page); border:1px solid var(--rule); color:var(--ink2); }
+    .ds-footer{ display:flex; align-items:center; justify-content:space-between;
+                padding-top:.75rem; border-top:1px solid var(--rule); margin-top:auto; }
+    .ds-links { display:flex; gap:.6rem; }
+    .ds-link  { font-size:.76rem; font-weight:600; text-decoration:none;
+                color:var(--teal); transition:color .15s; }
+    .ds-link:hover   { color:var(--teal-dark); }
+    .ds-link.github  { color:var(--ink2); }
+    .ds-link.github:hover { color:var(--ink); }
+    .add-card { border:2px dashed var(--rule); background:transparent;
+                justify-content:center; align-items:center; text-align:center;
+                min-height:220px; cursor:pointer; transition:border-color .2s; }
+    .add-card:hover { border-color:var(--teal); transform:translateY(-2px); }
+    .add-icon { width:44px; height:44px; background:var(--teal-light); border-radius:10px;
+                display:flex; align-items:center; justify-content:center;
+                margin:0 auto .8rem; font-size:20px; color:var(--teal-dark); font-weight:700; }
+
+    /* project submit form */
+    .project-form { background:var(--surface); border:1px solid var(--rule);
+                    border-radius:12px; padding:1.8rem; display:none; margin-top:1.5rem; }
+    .project-form.open { display:block; }
+
+    /* forum */
+    .forum-layout { display:grid; grid-template-columns:1fr 280px; gap:2rem; align-items:start; }
+    .forum-post { background:var(--surface); border:1px solid var(--rule);
+                  border-radius:12px; padding:1.25rem; margin-bottom:1rem;
+                  transition:border-color .2s; }
+    .forum-post:hover { border-color:var(--sky-mid); }
+    .post-header { display:flex; align-items:flex-start; gap:.75rem; margin-bottom:.8rem; }
+    .post-meta   { flex:1; min-width:0; }
+    .post-author { font-size:.9rem; font-weight:600; color:var(--ink); margin-bottom:.25rem;
+                   display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+    .post-badges { display:flex; gap:.3rem; flex-wrap:wrap; }
+    .post-title  { font-family:var(--serif); font-size:1rem; color:var(--ink);
+                   margin-bottom:.5rem; line-height:1.35; }
+    .post-body   { font-size:.87rem; color:var(--ink2); line-height:1.7; margin-bottom:.9rem; }
+    .post-tags   { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.9rem; }
+    .ptag        { font-size:.72rem; color:var(--sky-mid); background:var(--sky);
+                   padding:.2rem .55rem; border-radius:4px; font-weight:500; }
+    .post-actions{ display:flex; gap:1rem; border-top:1px solid var(--rule); padding-top:.75rem; }
+    .post-action { font-size:.78rem; color:var(--ink3); background:none; border:none;
+                   cursor:pointer; padding:0; display:flex; align-items:center;
+                   gap:.3rem; transition:color .15s; }
+    .post-action:hover { color:var(--sky-mid); }
+    .post-action.liked { color:var(--sky-mid); }
+    .composer { background:var(--surface); border:1px solid var(--rule);
+                border-radius:12px; padding:1.25rem; margin-bottom:1.5rem; }
+    .composer-top { display:flex; gap:.75rem; align-items:center; margin-bottom:.8rem; }
+    .composer-input { flex:1; background:var(--page); border:1px solid var(--rule);
+                      border-radius:8px; padding:.65rem 1rem; font-family:var(--sans);
+                      font-size:.9rem; color:var(--ink); outline:none; transition:border-color .15s; }
+    .composer-input:focus { border-color:var(--sky-mid); }
+    .badge-toggles { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.8rem; }
+    .badge-toggle  { font-size:.71rem; padding:.25rem .65rem; border-radius:20px;
+                     border:1px solid var(--rule); cursor:pointer; background:var(--surface);
+                     color:var(--ink2); transition:all .15s; font-family:var(--sans); }
+    .badge-toggle.on { background:var(--sky); border-color:var(--sky-mid); color:var(--sky-dark); }
+    .trending-item { display:flex; justify-content:space-between; align-items:center;
+                     padding:.5rem 0; border-bottom:1px solid var(--rule); font-size:.82rem; }
+    .trending-item:last-child { border-bottom:none; }
+    .trending-topic { color:var(--sky-dark); font-weight:500; cursor:pointer; }
+    .trending-count { font-family:var(--mono); font-size:.7rem; color:var(--ink3); }
+    .legend-item { display:flex; align-items:center; gap:.6rem;
+                   padding:.3rem 0; font-size:.8rem; color:var(--ink2); }
+    .legend-dot  { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+    /* about */
+    .about-grid  { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; }
+    .about-body p{ font-size:.96rem; color:var(--ink2); line-height:1.8; margin-bottom:1rem; }
+    .values-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .value-card  { background:var(--surface); border:1px solid var(--rule);
+                   border-radius:10px; padding:1.1rem; }
+    .v-icon      { width:32px; height:32px; border-radius:8px;
+                   display:flex; align-items:center; justify-content:center;
+                   margin-bottom:.7rem; font-size:16px; }
+    .value-card h4 { font-size:.88rem; font-weight:600; color:var(--ink); margin-bottom:.3rem; }
+    .value-card p  { font-size:.78rem; color:var(--ink2); line-height:1.6; }
+
+    /* footer */
+    footer { background:var(--ink); color:#b0bec8; padding:3rem 2rem; }
+    .footer-inner { max-width:1240px; margin:0 auto;
+                    display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:2.5rem; }
+    .footer-brand { font-family:var(--serif); font-size:1.05rem; color:#fff; margin-bottom:.5rem; }
+    .footer-tagline { font-size:.82rem; line-height:1.65; max-width:28ch; }
+    .footer-col-title { font-size:.7rem; font-weight:600; letter-spacing:.12em;
+                        text-transform:uppercase; color:#7a8d9e; margin-bottom:.8rem; }
+    .footer-col a { display:block; font-size:.82rem; color:#b0bec8;
+                    text-decoration:none; margin-bottom:.4rem; transition:color .15s; }
+    .footer-col a:hover { color:#fff; }
+    .footer-bottom { max-width:1240px; margin:2rem auto 0; padding-top:1.5rem;
+                     border-top:1px solid #1e2d3a; display:flex;
+                     justify-content:space-between; font-size:.74rem; color:#4a6070; }
+
+    @media(max-width:900px) {
+      .hero         { grid-template-columns:1fr; gap:2rem; }
+      .forum-layout { grid-template-columns:1fr; }
+      .about-grid   { grid-template-columns:1fr; }
+      .footer-inner { grid-template-columns:1fr 1fr; }
+    }
+    @media(max-width:600px) {
+      .footer-inner { grid-template-columns:1fr; }
+      .values-grid  { grid-template-columns:1fr; }
+    }
+
+    /* loading state */
+    .loading-posts { text-align:center; padding:3rem; color:var(--ink3); font-size:.9rem; }
+    .empty-state   { text-align:center; padding:3rem; color:var(--ink3); }
+    .empty-state h3{ font-family:var(--serif); font-size:1.2rem; margin-bottom:.5rem; color:var(--ink); }
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════ -->
+<header>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      Bipolar Data Science Forum
+      <span>Science · Community · Lived Experience</span>
+    </a>
+    <nav>
+      <a href="#research">Research</a>
+      <a href="#projects">DS Projects</a>
+      <a href="#forum">Forum</a>
+      <a href="#about">About</a>
+      <a href="pages/profile.html">Profile</a>
+    </nav>
+    <!-- signed-out -->
+    <div id="nav-signin">
+      <a href="pages/login.html" class="btn btn-ghost btn-sm">Sign in</a>
+      <a href="pages/signup.html" class="btn btn-primary btn-sm">Join</a>
+    </div>
+    <!-- signed-in -->
+    <div id="nav-user-area">
+      <a href="pages/profile.html" style="text-decoration:none;display:flex;align-items:center;gap:.5rem;">
+        <div class="nav-avatar"><span id="nav-avatar-initial">?</span></div>
+        <span id="nav-display-name"></span>
+      </a>
+      <button class="nav-signout-btn" onclick="auth.signOut()">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ HERO ════════════════════════════════════ -->
+<div class="hero">
+  <div class="fade-up">
+    <span class="hero-kicker">Neuroscience · Data Science · Lived Experience</span>
+    <h1>Where data science<br>meets <em>bipolar disorder</em></h1>
+    <p class="hero-sub">A research hub, open-source project space, and peer community built by people with bipolar disorder — applying data science to understand ourselves better.</p>
+    <div class="hero-btns">
+      <a href="#research"  class="btn btn-primary">Explore Research</a>
+      <a href="#projects"  class="btn btn-teal">DS Projects</a>
+      <a href="#forum"     class="btn btn-outline">Join Forum</a>
+    </div>
+  </div>
+  <div class="fade-up" style="animation-delay:.15s">
+    <div class="hero-stats">
+      <div class="stat-card"><span class="stat-num">2.8%</span><span class="stat-label">Global prevalence</span></div>
+      <div class="stat-card"><span class="stat-num">40+</span><span class="stat-label">Curated studies</span></div>
+      <div class="stat-card"><span class="stat-num">2025</span><span class="stat-label">Latest research</span></div>
+      <div class="stat-card"><span class="stat-num">6 yrs</span><span class="stat-label">Avg. to diagnosis</span></div>
+      <div class="stat-card"><span class="stat-num">Open</span><span class="stat-label">Source projects</span></div>
+      <div class="stat-card"><span class="stat-num">Free</span><span class="stat-label">Always open access</span></div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ RESEARCH ════════════════════════════════ -->
+<div class="section" id="research">
+  <span class="kicker" style="color:var(--teal)">Research Library</span>
+  <h2>Neuroscience &amp; Behavioral Science</h2>
+  <p class="section-sub">Peer-reviewed studies selected for relevance to people living with bipolar disorder. All links go to primary sources.</p>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="filterResearch('all',this)">All</button>
+    <button class="tab-btn" onclick="filterResearch('neuro',this)">Neuroscience</button>
+    <button class="tab-btn" onclick="filterResearch('behav',this)">Behavioral</button>
+    <button class="tab-btn" onclick="filterResearch('pharma',this)">Treatment</button>
+    <button class="tab-btn" onclick="filterResearch('genetic',this)">Genetics</button>
+    <button class="tab-btn" onclick="filterResearch('clinical',this)">Clinical</button>
+  </div>
+
+  <div class="research-grid" id="research-grid">
+    <a href="https://www.nature.com/articles/s41380-023-02005-y" target="_blank" class="card" data-cat="neuro">
+      <div class="rc-meta"><span class="rc-type type-neuro">Neuroscience</span><span class="rc-year">2024</span></div>
+      <h3 class="rc-title">Mitochondrial dysfunction and oxidative stress in bipolar disorder: a convergent neurobiological model</h3>
+      <p class="rc-journal">Molecular Psychiatry — Nature Publishing Group</p>
+      <p class="rc-excerpt">Mitochondrial impairment and elevated reactive oxygen species implicated in both manic and depressive phases, offering therapeutic targets beyond monoamine systems.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.sciencedirect.com/science/article/pii/S0006322323012246" target="_blank" class="card" data-cat="neuro">
+      <div class="rc-meta"><span class="rc-type type-neuro">Neuroscience</span><span class="rc-year">2023</span></div>
+      <h3 class="rc-title">Prefrontal-amygdala circuit dysregulation underlies emotional instability in bipolar I disorder</h3>
+      <p class="rc-journal">Biological Psychiatry</p>
+      <p class="rc-excerpt">fMRI data from 380 participants reveals reduced prefrontal inhibitory control over amygdala reactivity that persists even during euthymia — a trait-level neural signature.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.thelancet.com/journals/lanpsy/article/PIIS2215-0366(23)00362-0" target="_blank" class="card" data-cat="pharma">
+      <div class="rc-meta"><span class="rc-type type-pharma">Treatment</span><span class="rc-year">2024</span></div>
+      <h3 class="rc-title">Ketamine as adjunctive therapy for treatment-resistant bipolar depression: randomized controlled trial</h3>
+      <p class="rc-journal">The Lancet Psychiatry</p>
+      <p class="rc-excerpt">Sub-anesthetic ketamine infusions produced rapid antidepressant effects in bipolar II with a strong safety profile when combined with mood stabilizers in a 12-week RCT.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.nature.com/articles/s41588-021-00857-4" target="_blank" class="card" data-cat="genetic">
+      <div class="rc-meta"><span class="rc-type type-genetic">Genetics</span><span class="rc-year">2021</span></div>
+      <h3 class="rc-title">Genome-wide association study of 41,917 bipolar cases identifies novel loci and shared genetic architecture</h3>
+      <p class="rc-journal">Nature Genetics</p>
+      <p class="rc-excerpt">The largest BD GWAS to date identifies 64 associated loci with significant overlap with schizophrenia and major depression, advancing polygenic risk score research.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://jamanetwork.com/journals/jamapsychiatry/fullarticle/2788785" target="_blank" class="card" data-cat="behav">
+      <div class="rc-meta"><span class="rc-type type-behav">Behavioral</span><span class="rc-year">2022</span></div>
+      <h3 class="rc-title">Sleep disruption as a causal pathway to mood episode onset: a prospective EMA study</h3>
+      <p class="rc-journal">JAMA Psychiatry</p>
+      <p class="rc-excerpt">Night-to-night sleep variability — not just duration — predicted mood episode onset up to 5 days in advance across 200 participants over 18 months of EMA tracking.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.frontiersin.org/articles/10.3389/fpsyt.2023.1091669" target="_blank" class="card" data-cat="behav">
+      <div class="rc-meta"><span class="rc-type type-behav">Behavioral</span><span class="rc-year">2023</span></div>
+      <h3 class="rc-title">Goal dysregulation and reward sensitivity as transdiagnostic mechanisms in bipolar spectrum disorders</h3>
+      <p class="rc-journal">Frontiers in Psychiatry</p>
+      <p class="rc-excerpt">BAS hyperactivity explains elevated goal pursuit in hypomanic states, with implications for psychosocial treatments targeting reward sensitivity.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/36739915/" target="_blank" class="card" data-cat="clinical">
+      <div class="rc-meta"><span class="rc-type type-clinical">Clinical</span><span class="rc-year">2023</span></div>
+      <h3 class="rc-title">Interpersonal and social rhythm therapy reduces recurrence in bipolar II: 3-year follow-up</h3>
+      <p class="rc-journal">American Journal of Psychiatry</p>
+      <p class="rc-excerpt">IPSRT's emphasis on regularizing daily routines produced durable reductions in depressive episodes with effect sizes comparable to pharmacotherapy over 3 years.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.nature.com/articles/s41380-024-02490-3" target="_blank" class="card" data-cat="neuro">
+      <div class="rc-meta"><span class="rc-type type-neuro">Neuroscience</span><span class="rc-year">2025</span></div>
+      <h3 class="rc-title">Neuroinflammation and microglial activation as state-dependent biomarkers in bipolar disorder</h3>
+      <p class="rc-journal">Molecular Psychiatry</p>
+      <p class="rc-excerpt">PET imaging reveals elevated microglial activation during mood episodes that normalizes in euthymia, supporting neuroinflammation as a state rather than trait marker.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.thelancet.com/journals/lanpsy/article/PIIS2215-0366(24)00108-0" target="_blank" class="card" data-cat="clinical">
+      <div class="rc-meta"><span class="rc-type type-clinical">Clinical</span><span class="rc-year">2024</span></div>
+      <h3 class="rc-title">Digital phenotyping for early relapse detection: smartphone-based monitoring in 500 bipolar patients</h3>
+      <p class="rc-journal">The Lancet Psychiatry</p>
+      <p class="rc-excerpt">Passive smartphone data detected prodromal signs of mania 7 days before clinical onset with 78% sensitivity using machine learning models.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://pubmed.ncbi.nlm.nih.gov/37379886/" target="_blank" class="card" data-cat="genetic">
+      <div class="rc-meta"><span class="rc-type type-genetic">Genetics</span><span class="rc-year">2023</span></div>
+      <h3 class="rc-title">Polygenic risk scores for bipolar disorder predict educational attainment and occupational outcomes</h3>
+      <p class="rc-journal">PLOS Genetics</p>
+      <p class="rc-excerpt">High BD polygenic burden correlates with educational underachievement independent of clinical diagnosis, with creative occupations showing unexpected protective associations.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.nejm.org/doi/full/10.1056/NEJMoa2201840" target="_blank" class="card" data-cat="pharma">
+      <div class="rc-meta"><span class="rc-type type-pharma">Treatment</span><span class="rc-year">2023</span></div>
+      <h3 class="rc-title">Long-acting injectable aripiprazole for bipolar I maintenance: a 2-year naturalistic study</h3>
+      <p class="rc-journal">New England Journal of Medicine</p>
+      <p class="rc-excerpt">Monthly LAI aripiprazole reduced manic relapse rates by 45% vs oral equivalents in a real-world sample, with adherence cited as the primary mechanism of benefit.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+    <a href="https://www.cambridge.org/core/journals/psychological-medicine/article/circadian-rhythm-disruption-in-bipolar-disorder" target="_blank" class="card" data-cat="neuro">
+      <div class="rc-meta"><span class="rc-type type-neuro">Neuroscience</span><span class="rc-year">2023</span></div>
+      <h3 class="rc-title">Circadian clock gene variation and social zeitgeber disruption in bipolar disorder</h3>
+      <p class="rc-journal">Psychological Medicine</p>
+      <p class="rc-excerpt">Clock gene polymorphisms interact with social routine disruption to destabilize circadian rhythms, explaining why life events often trigger mood episodes.</p>
+      <span class="rc-link">Read study ↗</span>
+    </a>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ DS PROJECTS ══════════════════════════════ -->
+<div class="section" id="projects">
+  <span class="kicker" style="color:var(--teal)">Open Projects</span>
+  <h2>Data Science Projects</h2>
+  <p class="section-sub">Community-built analyses, models, and datasets applying data science to bipolar disorder. Share your work, find collaborators, or contribute.</p>
+
+  <div class="ds-grid" id="ds-grid">
+    <!-- seeded projects -->
+    <div class="ds-card">
+      <div class="ds-card-header">
+        <div><h3>Mood episode prediction from wearable time series</h3><p class="ds-author">Matt Munsell · Apr 2025</p></div>
+        <span class="ds-status status-active">Active</span>
+      </div>
+      <p class="ds-desc">Using Oura Ring sleep + HRV data alongside self-reported mood scores to train an LSTM model for personal episode prediction. Seeking collaborators with their own wearable data.</p>
+      <div class="ds-stack"><span class="ds-tag">Python</span><span class="ds-tag">PyTorch</span><span class="ds-tag">LSTM</span><span class="ds-tag">Oura API</span></div>
+      <div class="ds-footer"><span class="text-xs text-muted text-mono">Seeking collaborators</span><div class="ds-links"><a href="#forum" class="ds-link">Discuss ↗</a></div></div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-card-header">
+        <div><h3>NLP analysis of r/bipolar: language patterns across mood states</h3><p class="ds-author">Community · Feb 2025</p></div>
+        <span class="ds-status status-wip">In Progress</span>
+      </div>
+      <p class="ds-desc">Analyzing 5 years of r/bipolar posts to identify linguistic markers of mania vs depression vs euthymia. Sentiment, embeddings, and topic modeling on 200k+ posts.</p>
+      <div class="ds-stack"><span class="ds-tag">Python</span><span class="ds-tag">BERTopic</span><span class="ds-tag">NLTK</span><span class="ds-tag">NLP</span></div>
+      <div class="ds-footer"><span class="text-xs text-muted text-mono">3 contributors</span><div class="ds-links"><a href="#forum" class="ds-link">Discuss ↗</a></div></div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-card-header">
+        <div><h3>Open mood tracking dataset — call for contributions</h3><p class="ds-author">Community · Ongoing</p></div>
+        <span class="ds-status status-seeking">Seeking Data</span>
+      </div>
+      <p class="ds-desc">Building an anonymized community dataset of mood scores, sleep hours, medication notes, and life events. All contributions anonymized before upload. Freely available to all.</p>
+      <div class="ds-stack"><span class="ds-tag">Dataset</span><span class="ds-tag">CSV</span><span class="ds-tag">Open Data</span><span class="ds-tag">Privacy</span></div>
+      <div class="ds-footer"><span class="text-xs text-muted text-mono">47 contributors</span><div class="ds-links"><a href="#forum" class="ds-link">Contribute ↗</a></div></div>
+    </div>
+    <div class="ds-card">
+      <div class="ds-card-header">
+        <div><h3>Medication response clustering: lithium vs valproate vs lamotrigine</h3><p class="ds-author">Sara R. · Mar 2025</p></div>
+        <span class="ds-status status-complete">Complete</span>
+      </div>
+      <p class="ds-desc">K-means clustering on self-reported medication response data from 120 forum participants. Identified 4 distinct responder profiles. Full reproducible notebook available.</p>
+      <div class="ds-stack"><span class="ds-tag">Python</span><span class="ds-tag">scikit-learn</span><span class="ds-tag">Clustering</span><span class="ds-tag">Seaborn</span></div>
+      <div class="ds-footer"><span class="text-xs text-muted text-mono">Completed</span><div class="ds-links"><a href="#forum" class="ds-link">Read write-up ↗</a></div></div>
+    </div>
+    <!-- live projects from Firestore injected here -->
+    <div id="live-projects-anchor"></div>
+    <!-- add card -->
+    <div class="ds-card add-card" onclick="toggleProjectForm()">
+      <div class="add-icon">+</div>
+      <h3 style="font-size:1rem;margin-bottom:.4rem">Submit your project</h3>
+      <p style="font-size:.82rem;color:var(--ink3);max-width:24ch;margin:0 auto">Share an analysis, model, dataset, or idea</p>
+    </div>
+  </div>
+
+  <!-- project submit form (shown on click) -->
+  <div class="project-form" id="project-form">
+    <h3 style="font-family:var(--serif);font-size:1.2rem;margin-bottom:1.2rem">Submit a project</h3>
+    <div id="proj-auth-msg" style="display:none;background:var(--sky);border-radius:8px;padding:.8rem 1rem;font-size:.86rem;color:var(--sky-dark);margin-bottom:1rem">
+      You need to <a href="pages/login.html" style="font-weight:600;color:var(--sky-dark)">sign in</a> to submit a project.
+    </div>
+    <div id="proj-form-fields">
+      <div class="form-grid">
+        <div class="form-field"><label class="form-label">Project title</label><input class="form-input" id="proj-title" placeholder="What did you build?"></div>
+        <div class="form-field"><label class="form-label">Status</label>
+          <select class="form-select" id="proj-status">
+            <option value="wip">In Progress</option>
+            <option value="active">Active / Seeking Collaborators</option>
+            <option value="complete">Complete</option>
+            <option value="seeking">Seeking Data / Contributions</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-label">GitHub URL (optional)</label><input class="form-input" id="proj-github" placeholder="https://github.com/..."></div>
+        <div class="form-field"><label class="form-label">Tools (comma separated)</label><input class="form-input" id="proj-tags" placeholder="Python, pandas, scikit-learn"></div>
+        <div class="form-field full"><label class="form-label">Description</label><textarea class="form-textarea" id="proj-desc" placeholder="What does the project do, what data does it use, what have you found?"></textarea></div>
+      </div>
+      <div class="flex gap-sm mt-sm">
+        <button class="btn btn-teal" onclick="submitProject()">Add project</button>
+        <button class="btn btn-ghost" onclick="toggleProjectForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ FORUM ════════════════════════════════════ -->
+<div class="section" id="forum">
+  <span class="kicker" style="color:var(--purple)">Community Forum</span>
+  <h2>The Forum</h2>
+  <p class="section-sub">A scientific-yet-human space to discuss research, share data science work, and make sense of this disorder together.</p>
+
+  <div class="forum-layout">
+    <div>
+      <!-- composer -->
+      <div class="composer">
+        <div class="composer-top">
+          <div class="avatar" style="background:var(--sky);color:var(--sky-dark)" id="composer-avatar">?</div>
+          <input class="composer-input" id="post-input" placeholder="Share a finding, ask a question, start a discussion…">
+        </div>
+        <div id="forum-auth-msg" style="display:none;background:var(--sky);border-radius:8px;padding:.7rem 1rem;font-size:.85rem;color:var(--sky-dark);margin-bottom:.8rem">
+          <a href="pages/login.html" style="font-weight:600;color:var(--sky-dark)">Sign in</a> to post. Your badges from your profile will appear automatically.
+        </div>
+        <p class="text-xs text-muted" style="margin-bottom:.6rem" id="badge-hint">Your saved badges will appear on your post. <a href="pages/profile.html" style="color:var(--sky-mid)">Edit badges →</a></p>
+        <button class="btn btn-primary btn-sm" onclick="submitPost()">Post to community</button>
+      </div>
+
+      <!-- posts feed -->
+      <div id="posts-container">
+        <div class="loading-posts"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- sidebar -->
+    <div>
+      <div class="sidebar-widget">
+        <p class="sw-title">Trending topics</p>
+        <div class="trending-item"><span class="trending-topic">#wearables</span><span class="trending-count">91</span></div>
+        <div class="trending-item"><span class="trending-topic">#neuroinflammation</span><span class="trending-count">84</span></div>
+        <div class="trending-item"><span class="trending-topic">#sleep-tracking</span><span class="trending-count">61</span></div>
+        <div class="trending-item"><span class="trending-topic">#open-dataset</span><span class="trending-count">55</span></div>
+        <div class="trending-item"><span class="trending-topic">#ketamine</span><span class="trending-count">47</span></div>
+        <div class="trending-item"><span class="trending-topic">#circadian</span><span class="trending-count">39</span></div>
+        <div class="trending-item"><span class="trending-topic">#IPSRT</span><span class="trending-count">33</span></div>
+      </div>
+      <div class="sidebar-widget">
+        <p class="sw-title">Badge guide</p>
+        <div class="legend-item"><div class="legend-dot" style="background:#B5D4F4"></div>Job / profession</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#CECBF6"></div>Research role</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#C0DD97"></div>Data Scientist / ML</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9FE1CB"></div>Lived experience</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FAC775"></div>Caregiver / family</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F4C0D1"></div>Diagnosed</div>
+      </div>
+      <div class="crisis-box">
+        <p class="title">Need support now?</p>
+        <p>If you're in crisis, please reach out. You're not alone.</p>
+        <a href="https://988lifeline.org" target="_blank">988 Suicide &amp; Crisis Lifeline →</a>
+        <a href="https://www.dbsalliance.org" target="_blank">DBSA Helpline →</a>
+        <a href="https://www.nami.org/help" target="_blank">NAMI Helpline →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ ABOUT ════════════════════════════════════ -->
+<div class="section" id="about">
+  <span class="kicker" style="color:var(--amber)">Our Mission</span>
+  <h2>Why this space exists</h2>
+  <div class="about-grid">
+    <div class="about-body">
+      <p>Most research on bipolar disorder is written <em>about</em> us, not <em>for</em> us or <em>by</em> us. Academic papers sit behind paywalls. Clinical language creates distance. And the lived knowledge of millions of people navigating this disorder daily is rarely treated as expertise.</p>
+      <p>The Bipolar Data Science Forum adds something new: a place where people with bipolar disorder can also be the <em>builders</em> — applying data science to their own minds, sharing code and datasets, and producing analyses that academic researchers can't, because they don't live it.</p>
+      <p>We hold space for complexity. Science and suffering coexist here.</p>
+    </div>
+    <div class="values-grid">
+      <div class="value-card"><div class="v-icon" style="background:var(--sky)">🔍</div><h4>Science first</h4><p>Only peer-reviewed sources in the library. Primary literature, not pop summaries.</p></div>
+      <div class="value-card"><div class="v-icon" style="background:var(--teal-light)">📊</div><h4>Data by us</h4><p>Community-built projects. People with BD as researchers, not just research subjects.</p></div>
+      <div class="value-card"><div class="v-icon" style="background:var(--purple-light)">🔓</div><h4>Always free</h4><p>No paywalls, no ads. All research and projects are permanently open.</p></div>
+      <div class="value-card"><div class="v-icon" style="background:var(--amber-light)">⚖️</div><h4>Honest complexity</h4><p>We don't sanitize the difficulty. Hope and hardship are both welcome here.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ════════════════════════════════════ -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <p class="footer-brand">Bipolar Data Science Forum</p>
+      <p class="footer-tagline">Science · Community · Lived Experience. Open to all, built by people who understand.</p>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">Research</p>
+      <a href="#research">Neuroscience</a>
+      <a href="#research">Behavioral Science</a>
+      <a href="#research">Treatment</a>
+      <a href="#research">Genetics</a>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">Projects</p>
+      <a href="#projects">All Projects</a>
+      <a href="#projects">Submit a Project</a>
+      <a href="#projects">Open Datasets</a>
+    </div>
+    <div class="footer-col">
+      <p class="footer-col-title">Resources</p>
+      <a href="https://www.dbsalliance.org" target="_blank">DBSA</a>
+      <a href="https://www.nami.org" target="_blank">NAMI</a>
+      <a href="https://988lifeline.org" target="_blank">988 Lifeline</a>
+      <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank">PubMed</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Bipolar Data Science Forum. Not a substitute for professional medical advice.</span>
+    <span>Built with care by people who understand.</span>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
+<script>
+// ── research filter ──────────────────────────
+function filterResearch(cat, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#research-grid .card').forEach(c => {
+    c.style.display = (cat === 'all' || c.dataset.cat === cat) ? 'block' : 'none';
+  });
+}
+
+// ── project form ─────────────────────────────
+function toggleProjectForm() {
+  const f = document.getElementById('project-form');
+  const isOpen = f.classList.toggle('open');
+  const authMsg = document.getElementById('proj-auth-msg');
+  const fields  = document.getElementById('proj-form-fields');
+  if (isOpen) {
+    const user = auth.currentUser;
+    if (!user) { authMsg.style.display = 'block'; fields.style.opacity = '.4'; fields.style.pointerEvents = 'none'; }
+    else        { authMsg.style.display = 'none';  fields.style.opacity = '1';  fields.style.pointerEvents = 'auto'; }
+    f.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+async function submitProject() {
+  const user = auth.currentUser;
+  if (!user) { showToast('Please sign in first.'); return; }
+  const title  = document.getElementById('proj-title').value.trim();
+  const desc   = document.getElementById('proj-desc').value.trim();
+  const tags   = document.getElementById('proj-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const github = document.getElementById('proj-github').value.trim();
+  const status = document.getElementById('proj-status').value;
+  if (!title || !desc) { showToast('Please fill in title and description.'); return; }
+  try {
+    await db.collection('projects').add({
+      title, desc, tags, github, status,
+      authorId: user.uid,
+      authorName: user.displayName || user.email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Project submitted! ✓');
+    toggleProjectForm();
+    ['proj-title','proj-desc','proj-tags','proj-github'].forEach(id => document.getElementById(id).value = '');
+    loadProjects();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+// ── load projects from firestore ──────────────
+async function loadProjects() {
+  const anchor = document.getElementById('live-projects-anchor');
+  anchor.innerHTML = '';
+  const snap = await db.collection('projects').orderBy('createdAt','desc').limit(20).get();
+  const statusMap = { wip:'In Progress', active:'Active', complete:'Complete', seeking:'Seeking Data' };
+  const statusClass = { wip:'status-wip', active:'status-active', complete:'status-complete', seeking:'status-seeking' };
+  snap.forEach(doc => {
+    const d = doc.data();
+    const card = document.createElement('div');
+    card.className = 'ds-card fade-up';
+    const tagHtml = (d.tags||[]).map(t => `<span class="ds-tag">${t}</span>`).join('');
+    const ghLink  = d.github ? `<a href="${d.github}" target="_blank" class="ds-link github">GitHub ↗</a>` : '';
+    card.innerHTML = `
+      <div class="ds-card-header">
+        <div><h3>${d.title}</h3><p class="ds-author">${d.authorName||'Community'} · ${timeAgo(d.createdAt)}</p></div>
+        <span class="ds-status ${statusClass[d.status]||'status-wip'}">${statusMap[d.status]||'In Progress'}</span>
+      </div>
+      <p class="ds-desc">${d.desc}</p>
+      ${tagHtml ? `<div class="ds-stack">${tagHtml}</div>` : ''}
+      <div class="ds-footer"><span class="text-xs text-muted text-mono">Community project</span>
+        <div class="ds-links">${ghLink}<a href="#forum" class="ds-link">Discuss ↗</a></div>
+      </div>`;
+    anchor.before(card);
+  });
+}
+loadProjects();
+
+// ── forum posts ──────────────────────────────
+const avatarColors = [
+  {bg:'var(--sky)',      fg:'var(--sky-dark)'},
+  {bg:'var(--teal-light)',fg:'var(--teal-dark)'},
+  {bg:'var(--purple-light)',fg:'var(--purple-dark)'},
+  {bg:'var(--amber-light)',fg:'var(--amber-dark)'},
+  {bg:'var(--green-light)',fg:'var(--green-dark)'},
+];
+
+function buildPostHTML(data, id) {
+  const col   = avatarColors[Math.abs(data.authorId?.charCodeAt(0)||0) % avatarColors.length];
+  const init  = (data.authorName||'?')[0].toUpperCase();
+  const badges = renderBadges(data.badges||[]);
+  const tags  = (data.tags||[]).map(t => `<span class="ptag">#${t}</span>`).join('');
+  return `
+    <div class="forum-post fade-up" data-id="${id}">
+      <div class="post-header">
+        <div class="avatar" style="background:${col.bg};color:${col.fg}">${init}</div>
+        <div class="post-meta">
+          <div class="post-author">${data.authorName||'Anonymous'}
+            <div class="post-badges">${badges}</div>
+          </div>
+          <span class="text-xs text-muted text-mono">${timeAgo(data.createdAt)}</span>
+        </div>
+      </div>
+      ${data.title ? `<h4 class="post-title">${data.title}</h4>` : ''}
+      <p class="post-body">${data.body}</p>
+      ${tags ? `<div class="post-tags">${tags}</div>` : ''}
+      <div class="post-actions">
+        <button class="post-action" onclick="toggleLike(this,'${id}')" data-likes="${data.likes||0}">
+          ♡ <span>${data.likes||0}</span>
+        </button>
+        <button class="post-action">▢ Reply</button>
+        <button class="post-action">→ Share</button>
+      </div>
+    </div>`;
+}
+
+function loadPosts() {
+  const container = document.getElementById('posts-container');
+  db.collection('posts').orderBy('createdAt','desc').limit(30)
+    .onSnapshot(snap => {
+      if (snap.empty) {
+        container.innerHTML = `<div class="empty-state"><h3>No posts yet</h3><p>Be the first to start a discussion!</p></div>`;
+        return;
+      }
+      container.innerHTML = snap.docs.map(doc => buildPostHTML(doc.data(), doc.id)).join('');
+    });
+}
+loadPosts();
+
+async function submitPost() {
+  const user  = auth.currentUser;
+  const input = document.getElementById('post-input');
+  const text  = input.value.trim();
+  if (!user)  { showToast('Please sign in to post.'); return; }
+  if (!text)  { showToast('Write something first.'); return; }
+
+  // fetch user badges from profile
+  let badges = [];
+  try {
+    const profileDoc = await db.collection('users').doc(user.uid).get();
+    if (profileDoc.exists) badges = profileDoc.data().badges || [];
+  } catch(e) {}
+
+  await db.collection('posts').add({
+    body: text,
+    authorId: user.uid,
+    authorName: user.displayName || user.email,
+    badges,
+    tags: [],
+    likes: 0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  input.value = '';
+  showToast('Posted! ✓');
+}
+
+async function toggleLike(btn, postId) {
+  const user = auth.currentUser;
+  if (!user) { showToast('Sign in to like posts.'); return; }
+  const span = btn.querySelector('span');
+  const cur  = parseInt(btn.dataset.likes) || 0;
+  const liked = btn.classList.toggle('liked');
+  const next  = liked ? cur + 1 : Math.max(0, cur - 1);
+  btn.innerHTML = `${liked ? '♥' : '♡'} <span>${next}</span>`;
+  btn.dataset.likes = next;
+  await db.collection('posts').doc(postId).update({ likes: firebase.firestore.FieldValue.increment(liked ? 1 : -1) });
+}
+
+// update composer avatar on auth change
+auth.onAuthStateChanged(user => {
+  const av   = document.getElementById('composer-avatar');
+  const hint = document.getElementById('badge-hint');
+  const msg  = document.getElementById('forum-auth-msg');
+  if (user) {
+    if (av)   { av.textContent = (user.displayName||user.email||'?')[0].toUpperCase(); }
+    if (hint) hint.style.display = 'block';
+    if (msg)  msg.style.display  = 'none';
+  } else {
+    if (av)   av.textContent = '?';
+    if (hint) hint.style.display = 'none';
+    if (msg)  msg.style.display  = 'block';
+  }
+});
+
+// ── toast ────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
